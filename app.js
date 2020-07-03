@@ -89,8 +89,12 @@ const app = http.createServer((request, response) => {
 			const title = post.title;
 			const description = post.description;
 			fs.writeFile(`data/${title}`, description, 'utf8', err => {
-				response.writeHead(302, { Location: `/?id=${title}` });
-				response.end();
+				if (err) {
+					console.log('err', err);
+				} else {
+					response.writeHead(302, { Location: `/?id=${title}` });
+					response.end();
+				}
 			});
 		});
 	} else if (pathName === '/update') {
@@ -131,10 +135,18 @@ const app = http.createServer((request, response) => {
 			const title = post.title;
 			const description = post.description;
 			fs.rename(`data/${id}`, `data/${title}`, function (error) {
-				fs.writeFile(`data/${title}`, description, 'utf8', function (err) {
-					response.writeHead(302, { Location: `/?id=${title}` });
-					response.end();
-				});
+				if (error) {
+					console.log('error', error);
+				} else {
+					fs.writeFile(`data/${title}`, description, 'utf8', function (err) {
+						if (err) {
+							console.log('err', err);
+						} else {
+							response.writeHead(302, { Location: `/?id=${title}` });
+							response.end();
+						}
+					});
+				}
 			});
 		});
 	} else if (pathName === '/delete_process') {
@@ -147,8 +159,12 @@ const app = http.createServer((request, response) => {
 			const id = post.id;
 			const filteredId = path.parse(id).base;
 			fs.unlink(`data/${filteredId}`, err => {
-				response.writeHead(302, { Location: `/` });
-				response.end();
+				if (err) {
+					console.log('err', err);
+				} else {
+					response.writeHead(302, { Location: `/` });
+					response.end();
+				}
 			});
 		});
 	} else {
