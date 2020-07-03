@@ -20,7 +20,7 @@ module.exports = {
 		let list = '<ul>';
 		let i = 0;
 		while (i < filelist.length) {
-			list += `<li><a href="/?id=${filelist[i]}">${filelist}</a></li>`;
+			list += `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
 			i = i + 1;
 		}
 		list += '</ul>';
