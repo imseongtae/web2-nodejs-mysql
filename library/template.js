@@ -16,11 +16,11 @@ module.exports = {
       </html>
     `;
 	},
-	list: function (filelist) {
+	list: function (topics) {
 		let list = '<ul>';
 		let i = 0;
-		while (i < filelist.length) {
-			list += `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+		while (i < topics.length) {
+			list += `<li><a href="/?id=${topics[i].id}">${topics[i].title}</a></li>`;
 			i = i + 1;
 		}
 		list += '</ul>';
