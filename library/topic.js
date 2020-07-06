@@ -188,6 +188,23 @@ const update_process = (request, response) => {
 	});
 };
 
+const destroy = (request, response) => {
+	let body = '';
+	request.on('data', data => {
+		body += data;
+	});
+	request.on('end', () => {
+		const post = qs.parse(body);
+		db.query('DELETE FROM topic WHERE id = ?', [post.id], (error, result) => {
+			if (error) throw error;
+			response.writeHead(302, { Location: '/' });
+			console.log(result);
+			// console.log(`delete ${result[0].title} item`);
+			response.end();
+		});
+	});
+};
+
 module.exports = {
 	home,
 	page,
@@ -195,4 +212,5 @@ module.exports = {
 	create_process,
 	update,
 	update_process,
+	destroy,
 };
