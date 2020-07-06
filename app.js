@@ -40,7 +40,7 @@ const app = http.createServer((request, response) => {
 			db.query('SELECT * from topic', (error, topics) => {
 				if (error) throw error;
 				db.query(
-					`SELECT * FROM topic where id = ?`,
+					`SELECT * FROM topic LEFT JOIN author ON topic.author_id=author.id WHERE topic.id = ?`,
 					[queryData.id], // 공격의 의도가 있는 코드는 세탁해서 처리해줌
 					(error2, topic) => {
 						if (error2) throw error2;
@@ -54,7 +54,10 @@ const app = http.createServer((request, response) => {
 						const html = template.HTML(
 							sanitizedTitle,
 							list,
-							`<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+							`
+								<h2>${sanitizedTitle}</h2>${sanitizedDescription}
+								<p>by ${topic[0].name}</p>
+							`,
 							`
 								<a href="/create">create</a>
 								<a href="/update?id=${queryData.id}">update</a>
@@ -101,6 +104,8 @@ const app = http.createServer((request, response) => {
 		});
 		request.on('end', function () {
 			const post = qs.parse(body);
+			// sanitizeHtml는 악성 스크립트를 방어하기 위한 패키지 모듈임
+			// 그러므로 sanitizeHtml 을 사용자로부터 값을 입력받는 부분에 걸어야...
 			db.query(
 				`INSERT INTO topic (title, description, created, author_id) VALUES(?, ?, NOW(), ?)`,
 				[post.title, post.description, 1],
@@ -169,16 +174,6 @@ const app = http.createServer((request, response) => {
 		});
 		request.on('end', () => {
 			const post = qs.parse(body);
-			// const id = post.id;
-			// const filteredId = path.parse(id).base;
-			// fs.unlink(`data/${filteredId}`, err => {
-			// 	if (err) {
-			// 		console.log('err', err);
-			// 	} else {
-			// 		response.writeHead(302, { Location: `/` });
-			// 		response.end();
-			// 	}
-			// });
 			db.query('DELETE FROM topic WHERE id = ?', [post.id], (error, result) => {
 				if (error) throw error;
 				response.writeHead(302, { Location: '/' });
