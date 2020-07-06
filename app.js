@@ -1,20 +1,10 @@
 const http = require('http');
-const fs = require('fs');
 const url = require('url');
 const qs = require('querystring');
-const path = require('path');
-const sanitizeHtml = require('sanitize-html');
-const mysql = require('mysql2');
 
+const db = require('./models');
 const template = require('./library/template');
-
-const db = mysql.createConnection({
-	host: 'localhost',
-	user: 'root',
-	password: '12345',
-	database: 'opentutorials',
-});
-db.connect();
+const topic = require('./library/topic');
 
 const app = http.createServer((request, response) => {
 	const _url = request.url;
@@ -23,55 +13,9 @@ const app = http.createServer((request, response) => {
 
 	if (pathName === '/') {
 		if (queryData.id === undefined) {
-			db.query(`SELECT * FROM topic`, (error, topics) => {
-				const title = 'Welcome';
-				const description = 'Hello Nodejs-MySQL';
-				const list = template.list(topics);
-				const html = template.HTML(
-					title,
-					list,
-					`<h2>${title}</h2>${description}`,
-					`<a href="/create">create</a>`,
-				);
-				response.writeHead(200);
-				response.end(html);
-			});
+			topic.home(response);
 		} else {
-			db.query('SELECT * from topic', (error, topics) => {
-				if (error) throw error;
-				db.query(
-					`SELECT * FROM topic LEFT JOIN author ON topic.author_id=author.id WHERE topic.id = ?`,
-					[queryData.id], // 공격의 의도가 있는 코드는 세탁해서 처리해줌
-					(error2, topic) => {
-						if (error2) throw error2;
-						console.log(topic);
-						// sanitizeHtml는 악성 스크립트를 방어하기 위한 패키지 모듈임
-						const sanitizedTitle = sanitizeHtml(topic[0].title);
-						const sanitizedDescription = sanitizeHtml(topic[0].description, {
-							allowedTags: ['h1'],
-						});
-						const list = template.list(topics);
-						const html = template.HTML(
-							sanitizedTitle,
-							list,
-							`
-								<h2>${sanitizedTitle}</h2>${sanitizedDescription}
-								<p>by ${topic[0].name}</p>
-							`,
-							`
-								<a href="/create">create</a>
-								<a href="/update?id=${queryData.id}">update</a>
-								<form action="delete_process" method="post">
-									<input type="hidden" name="id" value="${queryData.id}">
-									<input type="submit" value="delete"> 
-								</form>
-							`,
-						);
-						response.writeHead(200);
-						response.end(html);
-					},
-				);
-			});
+			topic.page(request, response);
 		}
 	} else if (pathName === '/create') {
 		db.query(`SELECT * FROM topic`, (error, topics) => {
