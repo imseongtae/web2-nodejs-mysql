@@ -26,10 +26,16 @@ module.exports = {
 		list += '</ul>';
 		return list;
 	},
-	selectAuthor(authors) {
+	selectAuthor(authors, author_id) {
 		let tag = '';
+		// let selected = ''; // for문 밖에 있다고 selected가 안됨. 이유를 모르겠음
+		// 모든 항목에 selected="" 가 붙음
 		for (let i = 0; i < authors.length; i++) {
-			tag += `<option value="${authors[i].id}">${authors[i].name}</option>`;
+			let selected = '';
+			if (authors[i].id === author_id) {
+				selected = ' selected';
+			}
+			tag += `<option value="${authors[i].id}" ${selected}>${authors[i].name}</option>`;
 		}
 		return `
       <select name="author">${tag}</select>
