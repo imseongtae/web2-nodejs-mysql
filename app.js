@@ -169,15 +169,21 @@ const app = http.createServer((request, response) => {
 		});
 		request.on('end', () => {
 			const post = qs.parse(body);
-			const id = post.id;
-			const filteredId = path.parse(id).base;
-			fs.unlink(`data/${filteredId}`, err => {
-				if (err) {
-					console.log('err', err);
-				} else {
-					response.writeHead(302, { Location: `/` });
-					response.end();
-				}
+			// const id = post.id;
+			// const filteredId = path.parse(id).base;
+			// fs.unlink(`data/${filteredId}`, err => {
+			// 	if (err) {
+			// 		console.log('err', err);
+			// 	} else {
+			// 		response.writeHead(302, { Location: `/` });
+			// 		response.end();
+			// 	}
+			// });
+			db.query('DELETE FROM topic WHERE id = ?', [post.id], (error, result) => {
+				if (error) throw error;
+				response.writeHead(302, { Location: '/' });
+				console.log(`delete item`);
+				response.end();
 			});
 		});
 	} else {
