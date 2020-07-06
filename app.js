@@ -75,27 +75,32 @@ const app = http.createServer((request, response) => {
 		}
 	} else if (pathName === '/create') {
 		db.query(`SELECT * FROM topic`, (error, topics) => {
-			const title = 'Create';
-			const list = template.list(topics);
-			const html = template.HTML(
-				title,
-				list,
-				`
-					<h2>${title}</h2>
-          <form action="/create_process" method="post">
-            <p><input type="text" name="title" placeholder="title"></p>
-            <p>
-              <textarea name="description" placeholder="description"></textarea>
-            </p>
-            <p>
-              <input type="submit" value="create post">
-            </p>
-          </form>
-        `,
-				`<a href="/create">create</a>`,
-			);
-			response.writeHead(200);
-			response.end(html);
+			db.query(`SELECT * FROM author`, (error, authors) => {
+				const title = 'Create';
+				const list = template.list(topics);
+				const html = template.HTML(
+					title,
+					list,
+					`
+						<h2>${title}</h2>
+						<form action="/create_process" method="post">
+							<p><input type="text" name="title" placeholder="title"></p>
+							<p>
+								<textarea name="description" placeholder="description"></textarea>
+							</p>
+							<p>
+								${template.selectAuthor(authors)}							
+							</p>
+							<p>
+								<input type="submit" value="create post">
+							</p>
+						</form>
+					`,
+					`<a href="/create">create</a>`,
+				);
+				response.writeHead(200);
+				response.end(html);
+			});
 		});
 	} else if (pathName === '/create_process') {
 		let body = '';
@@ -108,7 +113,7 @@ const app = http.createServer((request, response) => {
 			// 그러므로 sanitizeHtml 을 사용자로부터 값을 입력받는 부분에 걸어야...
 			db.query(
 				`INSERT INTO topic (title, description, created, author_id) VALUES(?, ?, NOW(), ?)`,
-				[post.title, post.description, 1],
+				[post.title, post.description, post.author],
 				(error, result) => {
 					if (error) throw error;
 					// 글 생성 후 해당 글로 이동!
@@ -177,7 +182,8 @@ const app = http.createServer((request, response) => {
 			db.query('DELETE FROM topic WHERE id = ?', [post.id], (error, result) => {
 				if (error) throw error;
 				response.writeHead(302, { Location: '/' });
-				console.log(`delete item`);
+				console.log(result);
+				// console.log(`delete ${result[0].title} item`);
 				response.end();
 			});
 		});
