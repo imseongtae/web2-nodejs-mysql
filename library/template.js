@@ -5,7 +5,8 @@ module.exports = {
       <html>
         <head>
           <title>WEB2 - ${title}</title>
-          <meta charset="utf-8">
+					<meta charset="utf-8">
+					<style>a {text-decoration: none;}</style>
         </head>
         <body>
 					<h1><a href="/">WEB</a></h1>
@@ -43,16 +44,23 @@ module.exports = {
     `;
 	},
 	renderAuthorsTable(authors) {
-		let table_data ='';
-		authors.forEach((author) => {
+		let table_data = '';
+		authors.forEach(author => {
 			table_data += `
 				<tr>
 					<td>${author.name}</td>
 					<td>${author.profile}</td>
-					<td>update</td>
-					<td>delete</td>
+					<td>
+						<button><a href="/author/update?id=${author.id}">update</a></button>						
+					</td>
+					<td>
+						<form action="/author/delete" method="post">
+							<input type="hidden" name="id" value="${author.id}" />
+							<button type="submit">delete</button>
+						</form>						
+					</td>
 				</tr>
-			`
+			`;
 		});
 		const table = `
 			<table>
@@ -64,11 +72,14 @@ module.exports = {
 				</tr>
 				${table_data}
 			</table>
+			<button type="button">
+				<a href="/author/create">create</a>
+			</button>	
 			<style>
 				table {border: 1px solid black; border-collapse: collapse; }
 				td, th {border: 1px solid black; padding: 0 10px; }
 			</style>
-		`
-		return table;     
-	}
+		`;
+		return table;
+	},
 };
