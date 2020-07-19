@@ -5,6 +5,7 @@ WEB2 Nodejs를 학습한 내용을 기반으로 WEB2 Nodejs-MySQL 을 진행합�
 
 ## Escaping
 공격의 의도를 가진 자바스크립트 코드를 입력해서 이 코드를 웹 브라우저로 실행할 때 공격목적을 달성하는 공격 기법을 Cross site scripting (XSS)이라고 하며, 이를 막는 방법을 코드에 적용하기 위해 `sanitize-html`을 사용
+- Express에서는 helmet 라이브러리를 사용함으로써 간단하게 막을 수 있다고 한다. 
 
 `sanitize-html`은 들어오는 코드 나가는 코드 모두..! 해줘야 한다.
 사용자가 입력한 정보는 살균을 해야 한다. 
