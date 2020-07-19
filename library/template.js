@@ -1,3 +1,5 @@
+const sanitizeHtml = require('sanitize-html');
+
 module.exports = {
 	HTML: function (title, list, body, control) {
 		return `
@@ -22,7 +24,9 @@ module.exports = {
 		let list = '<ul>';
 		let i = 0;
 		while (i < topics.length) {
-			list += `<li><a href="/?id=${topics[i].id}">${topics[i].title}</a></li>`;
+			list += `<li><a href="/?id=${topics[i].id}">${sanitizeHtml(
+				topics[i].title,
+			)}</a></li>`;
 			i = i + 1;
 		}
 		list += '</ul>';
@@ -37,7 +41,9 @@ module.exports = {
 			if (authors[i].id === author_id) {
 				selected = ' selected';
 			}
-			tag += `<option value="${authors[i].id}" ${selected}>${authors[i].name}</option>`;
+			tag += `<option value="${authors[i].id}" ${selected}>${sanitizeHtml(
+				authors[i].name,
+			)}</option>`;
 		}
 		return `
       <select name="author">${tag}</select>
@@ -48,8 +54,8 @@ module.exports = {
 		authors.forEach(author => {
 			table_data += `
 				<tr>
-					<td>${author.name}</td>
-					<td>${author.profile}</td>
+					<td>${sanitizeHtml(author.name)}</td>
+					<td>${sanitizeHtml(author.profile)}</td>
 					<td>
 						<button><a href="/author/update?id=${author.id}">update</a></button>						
 					</td>

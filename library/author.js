@@ -11,7 +11,6 @@ const home = response => {
 	db.query(`SELECT * FROM topic`, (error, topics) => {
 		db.query('SELECT * FROM author', (error2, authors) => {
 			const title = 'Welcome';
-			const description = 'Hello Nodejs-MySQL';
 			const list = template.list(topics);
 			const html = template.HTML(
 				title,
@@ -107,14 +106,14 @@ const update = (request, response) => {
                 <legend>Update fieldset</legend>
                 <input type="hidden" name="id" value="${author[0].id}" />
                 <div>
-                  <input type="text" name="name" value="${
-										author[0].name
-									}" style="font-size:14px; margin-bottom: 10px;">
+                  <input type="text" name="name" value="${sanitizeHtml(
+										author[0].name,
+									)}" style="font-size:14px; margin-bottom: 10px;">
                 </div>
                 <div>
-                  <textarea name="description" placeholder="profile description">${
-										author[0].profile
-									}</textarea>
+                  <textarea name="description" placeholder="profile description">${sanitizeHtml(
+										author[0].profile,
+									)}</textarea>
                 </div>
                 <button type="submit">Update</button>
               </fieldset>
@@ -160,12 +159,26 @@ const destroy = (request, response) => {
 	request.on('end', () => {
 		const post = qs.parse(body);
 		console.log('쿼리 스트링 값: ', post.id);
-		db.query('DELETE FROM author WHERE id = ?', [post.id], (error, result) => {
-			if (error) throw error;
-			response.writeHead(302, { Location: '/author' });
-			console.log(result);
-			response.end();
-		});
+		// 저자가 삭제되면 저자가 생성한 글 또한 삭제되도록 기능 작성
+		db.query(
+			'DELETE FROM topic WHERE author_id = ?',
+			[post.id],
+			(topic_error, result) => {
+				if (topic_error) throw topic_error;
+
+				// WHERE가 빠지면 모든 데이터가 삭제되는 참상이 일어난다.
+				db.query(
+					'DELETE FROM author WHERE id = ?',
+					[post.id],
+					(error, result) => {
+						if (error) throw error;
+						response.writeHead(302, { Location: '/author' });
+						console.log(result);
+						response.end();
+					},
+				);
+			},
+		);
 	});
 };
 

@@ -134,8 +134,8 @@ const update = (request, response) => {
 			(error2, topic) => {
 				if (error2) throw error2;
 				db.query(`SELECT * FROM author`, (error, authors) => {
-					const title = topic[0].title;
-					const description = topic[0].description;
+					const title = sanitizeHtml(topic[0].title);
+					const description = sanitizeHtml(topic[0].description);
 					const list = template.list(topics);
 					const html = template.HTML(
 						title,
