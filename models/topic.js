@@ -50,11 +50,16 @@ module.exports.update = async options => {
 
 module.exports.destroy = async options => {
 	console.log('options: ', options);
-	let query = 'DELETE FROM topic WHERE id = ?';
+	let query = 'DELETE FROM topic';
 	let value;
 	if (options) {
 		if (options.id) {
+			query += ' WHERE id = ?';
 			value = [options.id];
+		}
+		if (options.author_id) {
+			query += ' WHERE author_id = ?';
+			value = [options.author_id];
 		}
 	}
 	return await db.query({ query, value });
