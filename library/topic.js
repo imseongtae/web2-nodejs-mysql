@@ -1,11 +1,9 @@
 const url = require('url');
 const qs = require('querystring');
 const sanitizeHtml = require('sanitize-html');
-// Server에 console log를 출력하는 morgan
 
-const db = require('./../models');
 const template = require('./template');
-
+// models
 const topicTable = require('../models/topic');
 const authorTable = require('../models/author');
 
@@ -105,12 +103,12 @@ const create = async response => {
 	}
 };
 
-const create_process = async (request, response) => {
+const create_process = (request, response) => {
+	let body = '';
+	request.on('data', function (data) {
+		body += data;
+	});
 	try {
-		let body = '';
-		request.on('data', function (data) {
-			body += data;
-		});
 		request.on('end', async function () {
 			const post = qs.parse(body);
 			// sanitizeHtml는 악성 스크립트를 방어하기 위한 패키지 모듈임
@@ -119,7 +117,6 @@ const create_process = async (request, response) => {
 			const sanitizedDescription = sanitizeHtml(post.description, {
 				allowedTags: ['h1'],
 			});
-
 			const newTopic = {
 				title: sanitizedTitle,
 				description: sanitizedDescription,
@@ -136,47 +133,43 @@ const create_process = async (request, response) => {
 	}
 };
 
-const update = (request, response) => {
+const update = async (request, response) => {
 	const _url = request.url;
 	const queryData = url.parse(_url, true).query;
 
-	db.query('SELECT * FROM topic', (error, topics) => {
-		if (error) throw error;
-		db.query(
-			'SELECT * FROM topic where id = ?',
-			[queryData.id],
-			(error2, topic) => {
-				if (error2) throw error2;
-				db.query(`SELECT * FROM author`, (error, authors) => {
-					const title = sanitizeHtml(topic[0].title);
-					const description = sanitizeHtml(topic[0].description);
-					const list = template.list(topics);
-					const html = template.HTML(
-						title,
-						list,
-						`
-            <form action="/update_process" method="post">
-              <input type="hidden" name="id" value="${topic[0].id}">
-              <p><input type="text" name="title" placeholder="title" value="${title}"></p>
-              <p>
-                <textarea name="description" placeholder="description">${description}</textarea>
-              </p>
-              <p>
-                ${template.selectAuthor(authors, topic[0].author_id)}
-              </p>
-              <p>
-                <input type="submit">
-              </p>
-            </form>
-            `,
-						`<a href="/create">create</a> <a href="/update?id=${topic[0].id}">update</a>`,
-					);
-					response.writeHead(200);
-					response.end(html);
-				});
-			},
+	try {
+		const topics = await topicTable.getTopics();
+		const topic = await topicTable.getTopics({ id: queryData.id });
+		const authors = await authorTable.getAuthors();
+		console.log('topic 정보: ', topic);
+		const title = sanitizeHtml(topic[0].title);
+		const description = sanitizeHtml(topic[0].description);
+		const list = template.list(topics);
+		const html = template.HTML(
+			title,
+			list,
+			`
+			<form action="/update_process" method="post">
+				<input type="hidden" name="id" value="${queryData.id}">
+				<p><input type="text" name="title" placeholder="title" value="${title}"></p>
+				<p>
+					<textarea name="description" placeholder="description">${description}</textarea>
+				</p>
+				<p>
+					${template.selectAuthor(authors, topic[0].author_id)}
+				</p>
+				<p>
+					<input type="submit">
+				</p>
+			</form>
+			`,
+			`<a href="/create">create</a> <a href="/update?id=${queryData.id}">update</a>`,
 		);
-	});
+		response.writeHead(200);
+		response.end(html);
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 const update_process = (request, response) => {
@@ -184,21 +177,22 @@ const update_process = (request, response) => {
 	request.on('data', data => {
 		body += data;
 	});
-	request.on('end', function () {
+	request.on('end', async () => {
 		const post = qs.parse(body);
+		console.log('post 객체', post);
 		const sanitizedTitle = sanitizeHtml(post.title);
 		const sanitizedDescription = sanitizeHtml(post.description, {
 			allowedTags: ['h1'],
 		});
-		db.query(
-			'UPDATE topic SET title=?, description=?, author_id=? WHERE id=?',
-			// [post.title, post.description, post.author, post.id],
-			[sanitizedTitle, sanitizedDescription, post.author, post.id],
-			(error, result) => {
-				response.writeHead(302, { Location: `/?id=${post.id}` });
-				response.end();
-			},
-		);
+		const updatedTopic = {
+			title: sanitizedTitle,
+			description: sanitizedDescription,
+			author_id: post.author,
+			id: post.id,
+		};
+		await topicTable.update(updatedTopic);
+		response.writeHead(302, { Location: `/?id=${post.id}` });
+		response.end();
 	});
 };
 
@@ -207,15 +201,15 @@ const destroy = (request, response) => {
 	request.on('data', data => {
 		body += data;
 	});
-	request.on('end', () => {
+	request.on('end', async () => {
 		const post = qs.parse(body);
-		db.query('DELETE FROM topic WHERE id = ?', [post.id], (error, result) => {
-			if (error) throw error;
+		try {
+			await topicTable.destroy({ id: post.id });
 			response.writeHead(302, { Location: '/' });
-			console.log(result);
-			// console.log(`delete ${result[0].title} item`);
 			response.end();
-		});
+		} catch (error) {
+			console.log(error);
+		}
 	});
 };
 

@@ -37,3 +37,25 @@ module.exports.insert = async options => {
 // 		value: options,
 // 	});
 // };
+
+module.exports.update = async options => {
+	console.log('options: ', options);
+	let query = 'UPDATE topic SET title=?, description=?, author_id=? WHERE id=?';
+	let value;
+	if (options) {
+		value = [options.title, options.description, options.author_id, options.id];
+	}
+	return await db.query({ query, value });
+};
+
+module.exports.destroy = async options => {
+	console.log('options: ', options);
+	let query = 'DELETE FROM topic WHERE id = ?';
+	let value;
+	if (options) {
+		if (options.id) {
+			value = [options.id];
+		}
+	}
+	return await db.query({ query, value });
+};
